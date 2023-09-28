@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import getpass,requests
+import getpass,requests,os
 import pandas as pd
 from colorama import Fore,init
 
@@ -44,8 +44,12 @@ class classCiscoSupport():
         url = "https://id.cisco.com/oauth2/default/v1/token"
         
         print("=" * 50)
+        #comment out if you want to test hard coded
         usr=input("Please enter your Cisco Support Client ID: ")
         pwd=getpass.getpass("Please enter your Cisco Support Client Secret: ")
+        #uncomment to hard code for testing
+        #usr="putyourclientidhere"
+        #pwd="putyoursecrethere"
 
         #Set data.  Authentication is required to get a token
         data = {
@@ -90,86 +94,104 @@ class classCiscoSupport():
         #print("=" * 50)
         defaultfile = "eolserials.csv"
         serialfile=input(f"Please choose file [{defaultfile}]: ").strip() or defaultfile
-
-        #open CSV file and replace new lines wiht commas as required by Cisco Support ResAPI
+                
+        #read CSV in chunks of 20 which is the maximum allowed by Cisco Support API
+        chunksize = 20 ** 1
+        readfile=pd.read_csv(serialfile, header=None)
+        #get total length
+        rowcount=len(readfile.index)
         
-        #with open(serialfile,'r') as f:
-        #    deviceserial = list(line for line in (l.strip() for l in f) if line)
-        #    deviceserial = f.read().replace('\n',',')
-        #    deviceserial = f.read().replace('\n',',').strip()
-        #print (deviceserial)
+        #open CSV file and replace new lines with commas as required by Cisco Support RestAPI
+        with pd.read_csv(serialfile, header=None, chunksize=chunksize) as reader:
+            #creates a header on the output csv on the first pass
+            writeheader = True
+            count = 0
+            for chunk in reader:
 
-        df = pd.read_csv(serialfile, header=None, nrows=20)
-        print ('Dataframe shape:',df.shape)
+            #read only the first 20 lines
+            #df = pd.read_csv(serialfile, header=None, nrows=20)
+                chunkamount = chunk.shape
+                progressnumber = count + chunkamount[0]
+                print ('Progress: [',progressnumber,'/',rowcount,']')
+                #remove whitespaces
+                df = chunk.to_string(header=None, index=False).replace(' ','')
+                deviceserial=df.replace('\n',',')
+                #print (deviceserial)
 
-        df = df.to_string(header=False, index=False)
-        deviceserial=df.replace('\n',',')
-        #run api call
-        try:
-            resp = requests.get(url+str(deviceserial),headers=tokenheaders, verify=True)
-            
-            #check for HTTP codes other than 200
-            if resp.status_code == 200:
-                #establish the base index of the json output
-                eoxrecord=resp.json()['EOXRecord']
-
-                #create dictionary for table
-                my_dict = {'deviceserial':[],'EOLDate':[]}
-                #my_dict = {'deviceserial':[],'EOLDate':[],'EOL Product ID':[],'Product Description':[], 'Migration Product':[], 'Migration Strategy':[]}
-                
-                #loop through the base index from the total length of output
-                for i in range(len(eoxrecord)):
-                    #establish variables from indexes of records of interest
-                    deviceid=eoxrecord[i]['EOXInputValue']
-                    eoldate=eoxrecord[i]['LastDateOfSupport']['value']
-                    eolproductid=eoxrecord[i]['EOLProductID']
-                    #piddescription=eoxrecord[i]['ProductIDDescription']
-                    #migration=eoxrecord[i]['EOXMigrationDetails']['MigrationProductName']
-                    #migrationstrategy=eoxrecord[i]['EOXMigrationDetails']['MigrationStrategy']
+                #run api call
+                try:
+                    resp = requests.get(url+str(deviceserial),headers=tokenheaders, verify=True)
                     
-                    #if the product id is empty, it is either not found or not EOL
-                    if eolproductid == "":
-                        #check the error id to see if not found or EOL
-                        eolerror=eoxrecord[i]['EOXError']['ErrorID']
-                        #SSA_ERR_015 is not found.  SSA_ERR_026 is not EOL
-                        if eolerror == "SSA_ERR_015":
-                            #pass to leave off the entries.  If yo want to write a column, reverse the comments
-                            #pass
-                            my_dict['deviceserial'].append(deviceid)
-                            my_dict['EOLDate'].append(eoldate)
-                            #my_dict['EOL Product ID'].append(eolproductid)
-                            #my_dict['Product Description'].append(piddescription)
-                            #my_dict['Migration Product'].append(migration)
-                            #my_dict['Migration Strategy'].append(migrationstrategy)
-                        else:
-                            #if not EOL then the product ID will be listed in this index
-                            eolproductid=eoxrecord[i]['EOXError']['ErrorDataValue']
-                    #if product id is not empty, that means it's EOL
-                    else:
-                        #if deviceid has a comma split it.  some entries for modules show up with both serials
-                        x = deviceid.split(",")
-                        #loop through both serials and append both to dictionary with the same eol date
-                        for i in x:
-                            my_dict['deviceserial'].append(i)
-                            my_dict['EOLDate'].append(eoldate)
-                            #my_dict['EOL Product ID'].append(eolproductid)
-                            #my_dict['Product Description'].append(piddescription)
-                            #my_dict['Migration Product'].append(migration)
-                            #my_dict['Migration Strategy'].append(migrationstrategy)
-                
-                #define the pandas dataframe
-                df=pd.DataFrame(my_dict)
-                print (df)
-                #convert this mother to CSV
-                df.to_csv('eolreport.csv', index=False)
+                    #check for HTTP codes other than 200
+                    if resp.status_code == 200:
+                        #establish the base index of the json output
+                        eoxrecord=resp.json()['EOXRecord']
 
-            #if the response code isn't 200 then something went wrong        
-            else:
-                print ("Login failed! -" + str(resp.text))
-                return ("Login failed! -" + str(resp.text))
-        except Exception as e:
-            print(str(e))
-            return(str(e))
+                        #create dictionary for table
+                        my_dict = {'deviceserial':[],'EOLDate':[]}
+                        #my_dict = {'deviceserial':[],'EOLDate':[],'EOL Product ID':[],'Product Description':[], 'Migration Product':[], 'Migration Strategy':[]}
+                        
+                        #loop through the base index from the total length of output
+                        for i in range(len(eoxrecord)):
+                            #establish variables from indexes of records of interest
+                            deviceid=eoxrecord[i]['EOXInputValue']
+                            eoldate=eoxrecord[i]['LastDateOfSupport']['value']
+                            eolproductid=eoxrecord[i]['EOLProductID']
+                            #piddescription=eoxrecord[i]['ProductIDDescription']
+                            #migration=eoxrecord[i]['EOXMigrationDetails']['MigrationProductName']
+                            #migrationstrategy=eoxrecord[i]['EOXMigrationDetails']['MigrationStrategy']
+                            
+                            #if the product id is empty, it is either not found or not EOL
+                            if eolproductid == "" or eolproductid == None:
+                                #check the error id to see if not found or EOL
+                                eolerror=eoxrecord[i]['EOXError']['ErrorID']
+                                #SSA_ERR_015 is not found, SSA_ERR_010 is invalid
+                                if eolerror == "SSA_ERR_015" or eolerror == "SSA_ERR_010":
+                                    #pass to leave off the entries.  If you want to write a column, comment out pass and reverse the other comments
+                                    pass
+                                    #my_dict['deviceserial'].append(deviceid)
+                                    #my_dict['EOLDate'].append(eoldate)
+                                    #my_dict['EOL Product ID'].append(eolproductid)
+                                    #my_dict['Product Description'].append(piddescription)
+                                    #my_dict['Migration Product'].append(migration)
+                                    #my_dict['Migration Strategy'].append(migrationstrategy)
+                                #SSA_ERR_026 is not EOL so just find the product id
+                                elif eolerror == "SSA_ERR_026":
+                                    #if not EOL then the product ID will be listed in this index
+                                    eolproductid=eoxrecord[i]['EOXError']['ErrorDataValue']
+                                else:
+                                    print ("Retrieval failed! -" + str(resp.text))
+                                    
+                            #if product id is not empty, that means it's EOL
+                            else:
+                                #if deviceid has a comma split it.  some entries for modules show up with both serials
+                                x = deviceid.split(",")
+                                #loop through both serials and append both to dictionary with the same eol date
+                                for i in x:
+                                    my_dict['deviceserial'].append(i)
+                                    my_dict['EOLDate'].append(eoldate)
+                                    #my_dict['EOL Product ID'].append(eolproductid)
+                                    #my_dict['Product Description'].append(piddescription)
+                                    #my_dict['Migration Product'].append(migration)
+                                    #my_dict['Migration Strategy'].append(migrationstrategy)
+                        
+                        #define the pandas dataframe
+                        df=pd.DataFrame(my_dict)
+                        print (df)
+                        #convert this mother to CSV and writes header if true
+                        df.to_csv('eolreport.csv', mode='a', index=False, header=writeheader)
+                        #sets header value to false so it doens't write again
+                        writeheader = False
+
+                    #if the response code isn't 200 then something went wrong        
+                    else:
+                        print ("Retrieval failed! -" + str(resp.text))
+                        return ("Retrieval failed! -" + str(resp.text))
+                except Exception as e:
+                    print(str(e))
+                    return(str(e))
+                #add completed amount to chunk count
+                count = count + chunkamount[0]
 
 ca = classCiscoSupport()
 ca.get_eol()
