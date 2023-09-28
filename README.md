@@ -46,7 +46,6 @@ Progress: [ 20 / 5000 ]
    deviceserial     EOLDate
 0   ABC12345678  2027-10-31
 1   DEF12343586  2027-10-31
-5   FGL2224B2WK  2027-04-30
 ```
 The report will run and will take around 15 minutes.
 When the report is complete there will be a file named eolreport.csv in the same directory you are in
