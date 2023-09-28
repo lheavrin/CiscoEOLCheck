@@ -36,19 +36,16 @@ python ciscoEOL.py
 
 Example:
 ```
-(env) lynns-mbp-m1$ python ciscoEOL.py
+(env) computername$ python ciscoEOL.py
 ==================================================
 Please enter your Cisco Support Client ID: abc123456
 Please enter your Cisco Support Client Secret:
 ==================================================
 Please choose file [eolserials.csv]:
-Progress: [ 20 / 9725 ]
+Progress: [ 20 / 5000 ]
    deviceserial     EOLDate
-0   FCW2212NFRH  2027-10-31
-1   FCW2212NFQL  2027-10-31
-2   FCW2212NFR4  2027-10-31
-3   FCW2212NE8A  2027-10-31
-4   FGL2224B2VK  2027-04-30
+0   ABC12345678  2027-10-31
+1   DEF12343586  2027-10-31
 5   FGL2224B2WK  2027-04-30
 ```
 The report will run and will take around 15 minutes.
