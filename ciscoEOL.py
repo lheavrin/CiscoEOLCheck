@@ -13,7 +13,7 @@ class classNetbrain():
     init()
     
     #Load environment variable from .env file in project root folder
-    #load_dotenv()
+    load_dotenv()
     
     #set NetBrain login information from environment variable file
     user = os.getenv('NETBRAIN_USER')
@@ -22,6 +22,7 @@ class classNetbrain():
     tenant = os.getenv('NETBRAIN_TENANT')
     domain = os.getenv('NETBRAIN_DOMAIN')
     server_url = os.getenv('NETBRAIN_BASE_URL')
+    eolreportfilename = os.getenv('CISCOEOL_REPORT')
 
     def __init__(self):
         """
@@ -263,8 +264,7 @@ class classNetbrain():
         #configure the url to query attributes
         url = self.server_url + "V1/CMDB/Devices/Attributes"
         #set parameters necessary for api call (Netbrain API defined)
-        eolreport = '~/Desktop/eolreport.csv'
-
+        eolreport = self.eolreportfilename 
         #convert the list of serials to a pandas dataframe
         df = pd.read_csv(eolreport)
 
@@ -328,7 +328,7 @@ class classCiscoSupport():
     init()
 
     #Load environment variable from .env file in project root folder
-    #load_dotenv()
+    load_dotenv()
     
     #set NetBrain login information from environment variable file
     usr = os.getenv('CISCOEOL_USER')
