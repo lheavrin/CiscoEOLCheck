@@ -1,5 +1,5 @@
 # CiscoEOLCheck
-Checks EOL of serials submitted via CSV against the online API
+Checks EOL of serials gathered from Netbrain against the online API and uploaded back to Netbrain
 
 ## Get EOL Dates from Cisco Support API
 1. clone the git repo by navigating to where you want the files to be in your local filesystem and run the following command
@@ -26,7 +26,25 @@ Your prompt should now look like this
 pip install -r requirements.txt
 ```
 
-4. Collect a CSV of serial numbers, 1 per row in excel and save it in the CiscoEOLCheck folder, where you should currently be.  The filename should be eolserials.csv, though it is not mandatory.
+4. Create a .env file for passwords and file locations.  Place it in the same directory as the python file.
+
+```
+#Netbrain
+#---
+NETBRAIN_USER="apiuser"
+NETBRAIN_PASSWORD="apipassword"
+NETBRAIN_AUTHENTICATION_ID="Tacacs"
+NETBRAIN_TENANT="tenantid"
+NETBRAIN_DOMAIN="domainid"
+NETBRAIN_BASE_URL="https://netbrainpath.fqdn.com/ServicesAPI/API/"
+
+#CiscoEOL
+#---
+CISCOEOL_USER="apiuser"
+CISCOEOL_PASSWORD="apisecret"
+CISCOEOL_SERIALS="/pathto/eolserials.csv"
+CISCOEOL_REPORT="/pathto/eolreport.csv"
+```
 
 5. You are now ready to run the EOL API call using Python.  When prompted, enter your API credentials from https://apiconsole.cisco.com and the filename of the serials you collected (or press enter for eolserials.csv).
 
@@ -47,5 +65,5 @@ Progress: [ 20 / 5000 ]
 0   ABC12345678  2027-10-31
 1   DEF12343586  2027-10-31
 ```
-The report will run and will take around 15 minutes.
-When the report is complete there will be a file named eolreport.csv in the same directory you are in
+The report will run and will take around 20-30 minutes.
+When the report is complete Netbrain devices and modules will be updated with the latest EOL dates
