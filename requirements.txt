@@ -61,7 +61,7 @@ ipywidgets==8.1.1
 isoduration==20.11.0
 itsdangerous==2.1.2
 jedi==0.19.1
-Jinja2==3.1.2
+Jinja2==3.1.3
 json5==0.9.14
 jsonpickle==2.2.0
 jsonpointer==2.4
@@ -99,7 +99,7 @@ overrides==7.4.0
 packaging==21.3
 pandas==2.1.1
 pandocfilters==1.5.0
-paramiko==2.12.0
+paramiko==3.4.0
 parso==0.8.3
 pathspec==0.10.1
 pexpect==4.9.0
@@ -127,7 +127,7 @@ pyats.topology==24.1
 pyats.utils==24.1
 pycparser==2.21
 pyftpdlib==1.5.7
-Pygments==2.13.0
+Pygments==2.17.2
 PyNaCl==1.5.0
 pyparsing==3.0.9
 python-dateutil==2.8.2
@@ -167,7 +167,7 @@ tzdata==2023.3
 unicon==24.1
 unicon.plugins==24.1
 uri-template==1.3.0
-urllib3==1.26.12
+urllib3==2.2.1
 wcwidth==0.2.5
 webcolors==1.13
 webencodings==0.5.1
